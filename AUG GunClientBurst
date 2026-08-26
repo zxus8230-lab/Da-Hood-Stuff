@@ -1,0 +1,247 @@
+-- Script Path: game:GetService("Workspace").Players:GetChildren()[2]["[AUG]"].GunClientBurst
+-- Took 0s to decompile.
+-- Executor: Potassium (v2.4.5)
+
+-- Decompiled with Potassium's decompiler.
+
+local CFrame_new_ret = CFrame.new(-0.1, 0.4, 1.8);
+local ReplicatedStorage = game:GetService("ReplicatedStorage");
+local LocalPlayer = game:GetService("Players").LocalPlayer;
+local script_Parent = script.Parent;
+local Handle = script_Parent:WaitForChild("Handle");
+local u1 = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait();
+local GunHandler = require(ReplicatedStorage.Modules.GunHandler);
+script_Parent.Handle:WaitForChild("ShootSound", 16);
+local u2 = game.PlaceId == 88976059384565 and {
+    Value = 5
+} or script_Parent.Ammo;
+local Range = script_Parent:WaitForChild("Range");
+local Value = script_Parent:WaitForChild("ShootingCooldown").Value;
+local u3 = 0;
+local u4 = require(ReplicatedStorage.Modules.Maid).new();
+u4:GiveTask(script_Parent.AncestryChanged:Connect(function() -- Line: 23
+    -- upvalues: script_Parent (copy), u4 (copy)
+    if not script_Parent.Parent then
+        u4:DoCleaning();
+    end;
+end));
+local u7 = script_Parent:WaitForChild("RemoteEvent", 2) or {
+    FireServer = function(p5: any, p6: string) -- Line: 30, Name: FireServer
+    end
+};
+local Value2 = script_Parent:WaitForChild("ToleranceCooldown").Value;
+u4:GiveTask(script_Parent.Activated:Connect(function() -- Line: 35
+    -- upvalues: u3 (ref), Value2 (copy), GunHandler (copy), u1 (copy), u7 (copy), u2 (copy), Handle (copy), CFrame_new_ret (copy), script_Parent (copy), Range (copy), ReplicatedStorage (copy), Value (copy)
+    if tick() - u3 < Value2 or (_G.GUN_COMBAT_TOGGLE or not GunHandler.getCanShoot(u1)) then
+        return;
+    end;
+
+    u3 = tick();
+    u7:FireServer("Shoot");
+    workspace:GetServerTimeNow();
+    task.spawn(function() -- Line: 43
+        -- upvalues: u2 (ref), Handle (ref), CFrame_new_ret (ref), script_Parent (ref), GunHandler (ref), u1 (ref), Range (ref), ReplicatedStorage (ref), Value (ref), u7 (ref)
+        for i = 1, u2.Value > 3 and 3 or u2.Value do
+            local Position = (Handle.CFrame * CFrame_new_ret).Position;
+            local v8 = script_Parent:FindFirstChild("Default") and (script_Parent.Default:FindFirstChild("Mesh") and script_Parent.Default.Mesh:FindFirstChild("Muzzle")) or {
+                WorldPosition = Position
+            };
+            local v9 = v8.WorldPosition + GunHandler.getAim(v8.WorldPosition) * 200;
+            local v10, v11, v12 = GunHandler.shoot({
+                Shooter = u1,
+                Handle = Handle,
+                ForcedOrigin = v8.WorldPosition or Position,
+                AimPosition = v9,
+                BeamColor = Color3.new(1, 0.545098, 0.14902),
+                Range = Range.Value
+            });
+            ReplicatedStorage.MainEvent:FireServer("ShootGun", Handle, v8.WorldPosition, v10, v11, v12);
+            task.wait(Value + 0.0095);
+            local _ = i;
+        end;
+
+        u7:FireServer();
+    end);
+end));
+script_Parent:GetPropertyChangedSignal("Grip"):Connect(function() -- Line: 68
+    game.ReplicatedStorage:WaitForChild("MainEvent"):FireServer("CHECKER_4");
+end);
+
+-- // Function Dumper made by King.Kevin
+-- // Script Path: game:GetService("Workspace").Players:GetChildren()[2]["[AUG]"].GunClientBurst
+
+--[[
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+
+Function Constants: Unknown Name
+        1 [string] = CFrame
+        2 [string] = new
+        4 [number] = -0.1
+        5 [number] = 0.4
+        6 [number] = 1.8
+        7 [string] = game
+        8 [Instance] = Ugc
+        9 [string] = ReplicatedStorage
+        10 [string] = GetService
+        11 [string] = Players
+        12 [string] = LocalPlayer
+        13 [string] = script
+        15 [string] = Parent
+        16 [string] = Handle
+        17 [string] = WaitForChild
+        18 [string] = Character
+        19 [string] = CharacterAdded
+        20 [string] = Wait
+        21 [string] = require
+        23 [string] = Modules
+        24 [string] = GunHandler
+        25 [string] = ShootSound
+        26 [string] = PlaceId
+        27 [number] = 88976059384565
+        28 [string] = Value
+        29 [number] = 5
+        30 [table]:
+        30 [table] table: 0x49ca0d1689d7c807
+                1 [number] = 5
+        31 [string] = Ammo
+        32 [string] = Range
+        33 [string] = ShootingCooldown
+        34 [string] = Maid
+        35 [string] = AncestryChanged
+        37 [string] = Connect
+        38 [string] = GiveTask
+        39 [string] = RemoteEvent
+        40 [string] = FireServer
+        41 [table]:
+        41 [table] table: 0xc79a718814069eb7
+                1 [number] = 0
+        43 [string] = ToleranceCooldown
+        44 [string] = Activated
+        45 [string] = Grip
+        46 [string] = GetPropertyChangedSignal
+
+====================================================================================================
+
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+
+Function Constants: Unknown Name
+        1 [string] = game
+        2 [Instance] = Ugc
+        3 [string] = ReplicatedStorage
+        4 [string] = MainEvent
+        5 [string] = WaitForChild
+        6 [string] = CHECKER_4
+        7 [string] = FireServer
+
+====================================================================================================
+
+Function Dump: FireServer
+
+Function Upvalues: FireServer
+
+Function Constants: FireServer
+
+====================================================================================================
+
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+        1 [Instance] = [AUG]
+        2 [table]:
+        2 [table] table: 0xeb5fad2f87ac9667
+                1 [table]:
+                _tasks [table] table: 0x950fdd58142fe897
+                        1 [RBXScriptConnection] = Connection
+                        2 [RBXScriptConnection] = Connection
+
+Function Constants: Unknown Name
+        1 [string] = Parent
+        2 [string] = DoCleaning
+
+====================================================================================================
+
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+        1 [number] = 0
+        2 [number] = 0.6
+        3 [table]:
+        3 [table] table: 0x340862d8ea517467
+                1 [function] = shoot
+                2 [function] = getAim
+                3 [function] = Unknown Name
+        4 [Instance] = Ticks_NOX
+        5 [Instance] = RemoteEvent
+        6 [Instance] = Ammo
+        7 [Instance] = Handle
+        8 [CFrame] = -0.100000001, 0.400000006, 1.79999995, 1, 0, 0, 0, 1, 0, 0, 0, 1
+        9 [Instance] = [AUG]
+        10 [Instance] = Range
+        11 [Instance] = ReplicatedStorage
+        12 [number] = 0.05
+
+Function Constants: Unknown Name
+        1 [string] = tick
+        3 [string] = _G
+        5 [string] = GUN_COMBAT_TOGGLE
+        6 [string] = getCanShoot
+        7 [string] = Shoot
+        8 [string] = FireServer
+        9 [string] = workspace
+        10 [Instance] = Workspace
+        11 [string] = GetServerTimeNow
+        12 [string] = task
+        13 [string] = spawn
+
+====================================================================================================
+
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+
+Function Constants: Unknown Name
+        1 [string] = Value
+        2 [string] = CFrame
+        3 [string] = Position
+        4 [string] = Default
+        5 [string] = FindFirstChild
+        6 [string] = Mesh
+        7 [string] = Muzzle
+        8 [string] = WorldPosition
+        9 [table]:
+        9 [table] table: 0x4e2a0a64c7817367
+                1 [number] = 0
+        10 [number] = 200
+        11 [string] = getAim
+        12 [string] = shoot
+        13 [string] = Shooter
+        14 [string] = Handle
+        15 [string] = ForcedOrigin
+        16 [string] = AimPosition
+        17 [string] = BeamColor
+        18 [string] = Range
+        19 [table]:
+        19 [table] table: 0xca3a1f9724d63d97
+                1 [number] = 0
+                2 [number] = 0
+                3 [number] = 0
+                4 [number] = 0
+                5 [number] = 0
+                6 [number] = 0
+        20 [string] = Color3
+        21 [string] = new
+        23 [number] = 0.545098
+        24 [number] = 0.14902
+        25 [string] = MainEvent
+        26 [string] = ShootGun
+        27 [string] = FireServer
+        28 [string] = task
+        29 [string] = wait
+        31 [number] = 0.0095
+
+====================================================================================================
+]]
