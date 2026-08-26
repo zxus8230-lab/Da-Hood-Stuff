@@ -1,0 +1,199 @@
+-- Script Path: game:GetService("Workspace").Players:GetChildren()[2]["[AK47]"].GunClientAutomatic
+-- Took 0s to decompile.
+-- Executor: Potassium (v2.4.5)
+
+-- Decompiled with Potassium's decompiler.
+
+local CFrame_new_ret = CFrame.new(-0.1, 0.5, -2.5);
+local ReplicatedStorage = game:GetService("ReplicatedStorage");
+local LocalPlayer = game:GetService("Players").LocalPlayer;
+local script_Parent = script.Parent;
+local Handle = script_Parent:WaitForChild("Handle");
+local u1 = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait();
+local GunHandler = require(ReplicatedStorage.Modules.GunHandler);
+script_Parent.Handle:WaitForChild("ShootSound", 16);
+local u2 = game.PlaceId == 88976059384565 and {
+    Value = 5
+} or script_Parent.Ammo;
+local Range = script_Parent:WaitForChild("Range");
+local Value = script_Parent:WaitForChild("ShootingCooldown").Value;
+local u3 = 0;
+local u4 = require(ReplicatedStorage.Modules.Maid).new();
+u4:GiveTask(script_Parent.AncestryChanged:Connect(function() -- Line: 22
+    -- upvalues: script_Parent (copy), u4 (copy)
+    if not script_Parent.Parent then
+        u4:DoCleaning();
+    end;
+end));
+local u7 = script_Parent:WaitForChild("RemoteEvent", 2) or {
+    FireServer = function(p5: any, p6: string) -- Line: 29, Name: FireServer
+    end
+};
+u4:GiveTask(script_Parent.Activated:Connect(function() -- Line: 33
+    -- upvalues: u3 (ref), GunHandler (copy), u1 (copy), u7 (copy), script_Parent (copy), u2 (copy), Handle (copy), CFrame_new_ret (copy), Range (copy), ReplicatedStorage (copy), Value (copy)
+    if tick() - u3 < 0.15 or (_G.GUN_COMBAT_TOGGLE or not GunHandler.getCanShoot(u1)) then
+        return;
+    end;
+
+    u3 = tick();
+    u7:FireServer("Shoot");
+    local u8 = true;
+    task.spawn(function() -- Line: 40
+        -- upvalues: u8 (ref), script_Parent (ref), u1 (ref), u2 (ref), GunHandler (ref), Handle (ref), CFrame_new_ret (ref), Range (ref), ReplicatedStorage (ref), Value (ref), u7 (ref)
+        while u8 and (script_Parent.Parent == u1 and (u2.Value > 0 and GunHandler.getCanShoot(u1))) do
+            local Position = (Handle.CFrame * CFrame_new_ret).Position;
+            local v9 = script_Parent:FindFirstChild("Default") and (script_Parent.Default:FindFirstChild("Mesh") and script_Parent.Default.Mesh:FindFirstChild("Muzzle")) or {
+                WorldPosition = Position
+            };
+            local v10 = v9.WorldPosition + GunHandler.getAim(v9.WorldPosition) * 200;
+            local v11, v12, v13 = GunHandler.shoot({
+                Shooter = u1,
+                Handle = Handle,
+                ForcedOrigin = v9.WorldPosition or Position,
+                AimPosition = v10,
+                BeamColor = Color3.new(1, 0.545098, 0.14902),
+                Range = Range.Value
+            });
+            ReplicatedStorage.MainEvent:FireServer("ShootGun", Handle, v9.WorldPosition, v11, v12, v13);
+            task.wait(Value + 0.0095);
+        end;
+
+        u7:FireServer();
+    end);
+    script_Parent.Deactivated:Wait();
+    u8 = false;
+end));
+script_Parent:GetPropertyChangedSignal("Grip"):Connect(function() -- Line: 66
+    game.ReplicatedStorage:WaitForChild("MainEvent"):FireServer("CHECKER_4");
+end);
+
+-- // Function Dumper made by King.Kevin
+-- // Script Path: game:GetService("Workspace").Players:GetChildren()[2]["[AK47]"].GunClientAutomatic
+
+--[[
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+        1 [Instance] = [AK47]
+        2 [table]:
+        2 [table] table: 0x7da540966504a327
+                1 [table]:
+                _tasks [table] table: 0xfbb4c1118927c657
+                        1 [RBXScriptConnection] = Connection
+                        2 [RBXScriptConnection] = Connection
+
+Function Constants: Unknown Name
+        1 [string] = Parent
+        2 [string] = DoCleaning
+
+====================================================================================================
+
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+
+Function Constants: Unknown Name
+        1 [string] = CFrame
+        2 [string] = new
+        4 [number] = -0.1
+        5 [number] = 0.5
+        6 [number] = -2.5
+        7 [string] = game
+        8 [Instance] = Ugc
+        9 [string] = ReplicatedStorage
+        10 [string] = GetService
+        11 [string] = Players
+        12 [string] = LocalPlayer
+        13 [string] = script
+        15 [string] = Parent
+        16 [string] = Handle
+        17 [string] = WaitForChild
+        18 [string] = Character
+        19 [string] = CharacterAdded
+        20 [string] = Wait
+        21 [string] = require
+        23 [string] = Modules
+        24 [string] = GunHandler
+        25 [string] = ShootSound
+        26 [string] = PlaceId
+        27 [number] = 88976059384565
+        28 [string] = Value
+        29 [number] = 5
+        30 [table]:
+        30 [table] table: 0x239b015473f44c87
+                1 [number] = 5
+        31 [string] = Ammo
+        32 [string] = Range
+        33 [string] = ShootingCooldown
+        34 [string] = Maid
+        35 [string] = AncestryChanged
+        37 [string] = Connect
+        38 [string] = GiveTask
+        39 [string] = RemoteEvent
+        40 [string] = FireServer
+        41 [table]:
+        41 [table] table: 0x29ab0f272801e237
+                1 [number] = 0
+        43 [string] = Activated
+        44 [string] = Grip
+        45 [string] = GetPropertyChangedSignal
+
+====================================================================================================
+
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+
+Function Constants: Unknown Name
+        1 [string] = game
+        2 [Instance] = Ugc
+        3 [string] = ReplicatedStorage
+        4 [string] = MainEvent
+        5 [string] = WaitForChild
+        6 [string] = CHECKER_4
+        7 [string] = FireServer
+
+====================================================================================================
+
+Function Dump: FireServer
+
+Function Upvalues: FireServer
+
+Function Constants: FireServer
+
+====================================================================================================
+
+Function Dump: Unknown Name
+
+Function Upvalues: Unknown Name
+        1 [number] = 0
+        2 [table]:
+        2 [table] table: 0x340862d8ea517467
+                1 [function] = shoot
+                2 [function] = getAim
+                3 [function] = Unknown Name
+        3 [Instance] = Ticks_NOX
+        4 [Instance] = RemoteEvent
+        5 [Instance] = [AK47]
+        6 [Instance] = Ammo
+        7 [Instance] = Handle
+        8 [CFrame] = -0.100000001, 0.5, -2.5, 1, 0, 0, 0, 1, 0, 0, 0, 1
+        9 [Instance] = Range
+        10 [Instance] = ReplicatedStorage
+        11 [number] = 0.1
+
+Function Constants: Unknown Name
+        1 [string] = tick
+        3 [number] = 0.15
+        4 [string] = _G
+        6 [string] = GUN_COMBAT_TOGGLE
+        7 [string] = getCanShoot
+        8 [string] = Shoot
+        9 [string] = FireServer
+        10 [string] = task
+        11 [string] = spawn
+        13 [string] = Deactivated
+        14 [string] = Wait
+
+====================================================================================================
+]]
