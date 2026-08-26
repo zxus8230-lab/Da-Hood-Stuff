@@ -1,0 +1,979 @@
+-- Script Path: game:GetService("ReplicatedStorage").Modules.GunHandler
+-- Took 0.01s to decompile.
+-- Executor: Potassium (v2.4.5)
+
+-- Decompiled with Potassium's decompiler.
+
+local u1 = { "[Shotgun]", "[Drum-Shotgun]", "[Rifle]", "[TacticalShotgun]", "[AR]", "[AUG]", "[AK47]", "[LMG]", "[SilencerAR]" };
+local u2 = {
+    Brainrot = "All"
+};
+local ReplicatedStorage = game:GetService("ReplicatedStorage");
+local Players = game:GetService("Players");
+local workspace_CurrentCamera = workspace.CurrentCamera;
+local TweenService = game:GetService("TweenService");
+game:GetService("UserInputService");
+local LocalPlayer = Players.LocalPlayer;
+local Mouse = LocalPlayer:GetMouse();
+local SkinAssets = ReplicatedStorage.SkinAssets;
+local u3 = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait();
+local u4 = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(ReplicatedStorage:WaitForChild("Animations"):WaitForChild("GunCombat"):WaitForChild("Shoot"));
+local u5 = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(ReplicatedStorage:WaitForChild("Animations"):WaitForChild("GunCombat"):WaitForChild("ShootLeft"));
+local u6 = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(ReplicatedStorage.Animations.GunCombat.ShootRight);
+local u7 = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(ReplicatedStorage:WaitForChild("Animations"):WaitForChild("GunCombat"):WaitForChild("AimShoot"));
+local ServerTimeNow = workspace:GetServerTimeNow();
+local _ = game.PlaceId == 88976059384565;
+local GunSoundPlay = require(ReplicatedStorage:WaitForChild("GunSoundPlay"));
+
+local function evalColorSequence(p8: userdata, p9: number) -- Line: 47
+    if p9 == 0 then
+        return p8.Keypoints[1].Value;
+    end;
+
+    if p9 == 1 then
+        return p8.Keypoints[#p8.Keypoints].Value;
+    end;
+
+    for i = 1, #p8.Keypoints - 1 do
+        local v10 = p8.Keypoints[i];
+        local v11 = p8.Keypoints[i + 1];
+
+        if v10.Time <= p9 and p9 < v11.Time then
+            local v12 = (p9 - v10.Time) / (v11.Time - v10.Time);
+
+            return Color3.new((v11.Value.R - v10.Value.R) * v12 + v10.Value.R, (v11.Value.G - v10.Value.G) * v12 + v10.Value.G, (v11.Value.B - v10.Value.B) * v12 + v10.Value.B);
+        end;
+
+        local _ = i;
+    end;
+end;
+
+local function playerShot(p13) -- Line: 72
+    -- upvalues: u3 (copy), LocalPlayer (copy), u4 (ref), ReplicatedStorage (copy), u5 (ref), u6 (ref), u7 (ref), u1 (copy)
+    if u3 ~= LocalPlayer.Character then
+        u4 = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(ReplicatedStorage.Animations.GunCombat.Shoot);
+        u5 = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(ReplicatedStorage.Animations.GunCombat.ShootLeft);
+        u6 = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(ReplicatedStorage.Animations.GunCombat.ShootRight);
+        u7 = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(ReplicatedStorage.Animations.GunCombat.AimShoot);
+    end;
+
+    if _G.Aimed or (_G.MobleAimingIn or table.find(u1, p13.Parent.Name)) then
+        u7:Play();
+
+        return;
+    end;
+
+    if not p13:GetAttribute("DualWield") then
+        u4:Play();
+
+        return;
+    end;
+
+    u5:Play();
+    u6:Play();
+end;
+
+shared.playerShot = playerShot;
+local u24 = {
+    getCanShoot = require(script.CanShoot),
+
+    getAim = function(p14: vector, p15: number?) -- Line: 99, Name: getAim
+        -- upvalues: LocalPlayer (copy), workspace_CurrentCamera (copy), Mouse (copy)
+        local RaycastParams_new_ret = RaycastParams.new();
+        local v16 = { LocalPlayer.Character };
+        local v17 = p15 or 200;
+
+        for _, child in workspace.Ignored:GetChildren() do
+            table.insert(v16, child);
+        end;
+
+        RaycastParams_new_ret.FilterDescendantsInstances = v16;
+        RaycastParams_new_ret.FilterType = Enum.RaycastFilterType.Exclude;
+        RaycastParams_new_ret.IgnoreWater = true;
+        local v18;
+
+        if _G.MobileShiftLock or _G.MobleAimingIn then
+            local Position = workspace_CurrentCamera.CFrame.Position;
+            local v19 = workspace_CurrentCamera.CFrame.LookVector * v17;
+            local v20 = workspace:Raycast(Position, v19, RaycastParams_new_ret);
+
+            if v20 then
+                v18 = v20.Position;
+            else
+                v18 = Position + v19;
+            end;
+        else
+            local v21 = workspace_CurrentCamera:ScreenPointToRay(Mouse.X, Mouse.Y);
+            local v22 = workspace:Raycast(v21.Origin, v21.Direction * v17, RaycastParams_new_ret);
+
+            if v22 then
+                v18 = v22.Position;
+            else
+                local CFrame2 = workspace_CurrentCamera.CFrame;
+                local LookVector = CFrame2.LookVector;
+                local Origin = v21.Origin;
+                local Direction = v21.Direction;
+                v18 = Origin + Direction * ((CFrame2.Position + CFrame2.LookVector * v17 - Origin):Dot(LookVector) / Direction:Dot(LookVector));
+            end;
+        end;
+
+        local v23 = v18 - p14;
+
+        return v23.Unit, v23.Magnitude;
+    end
+};
+local u25 = {};
+
+function u24.shoot(p26: table) -- Line: 145
+    -- upvalues: Players (copy), u24 (copy), LocalPlayer (copy), SkinAssets (copy), evalColorSequence (copy), TweenService (copy), ServerTimeNow (copy), playerShot (copy), u25 (copy), u2 (copy), GunSoundPlay (copy)
+    local Shooter = p26.Shooter;
+    local Handle = p26.Handle;
+    local AimPosition = p26.AimPosition;
+    local BeamColor = p26.BeamColor;
+    local isReflecting = p26.isReflecting;
+    local Hit = p26.Hit;
+    local u27 = p26.Range or 200;
+    Handle = Handle;
+    local u28;
+
+    if Handle then
+        u28 = Handle:GetAttribute("SkinName");
+    end;
+
+    local IsLeftHand = p26.IsLeftHand;
+    local PlayerFromCharacter = Players:GetPlayerFromCharacter(Shooter);
+
+    if PlayerFromCharacter then
+        PlayerFromCharacter = PlayerFromCharacter:GetAttribute("GunFX") == true;
+    end;
+
+    local _, v29 = u24.getAim(Handle.Position, u27);
+
+    if Shooter ~= LocalPlayer.Character then
+        v29 = u27;
+    end;
+
+    local u30 = p26.ForcedOrigin or Handle.Muzzle.WorldPosition;
+    local Unit = (AimPosition - u30).Unit;
+    local RaycastParams_new_ret = RaycastParams.new();
+    local v31 = {};
+    local Ignored = require(game.ReplicatedStorage.MainModule).Ignored;
+    v31[1], v31[2] = Shooter, unpack(Ignored);
+    RaycastParams_new_ret.FilterDescendantsInstances = v31;
+    RaycastParams_new_ret.FilterType = Enum.RaycastFilterType.Exclude;
+    RaycastParams_new_ret.IgnoreWater = true;
+    local u32, u33, u34;
+
+    if Hit then
+        u32 = p26.Hit;
+        u33 = p26.AimPosition;
+        u34 = p26.Normal;
+    else
+        local v35 = workspace:Raycast(u30, Unit * u27, RaycastParams_new_ret);
+
+        if v35 then
+            u32 = v35.Instance;
+            u33 = v35.Position;
+            u34 = v35.Normal;
+        else
+            u33 = u30 + Unit * math.min(v29, u27);
+            u34 = nil;
+            u32 = nil;
+        end;
+    end;
+
+    if u32 then
+        local _ = u32.Name == "Head";
+    end;
+
+    local Part = Instance.new("Part");
+    Part:SetAttribute("OwnerCharacter", Shooter.Name);
+    Part.Name = "BULLET_RAYS";
+    Part.Anchored = true;
+    Part.CanCollide = false;
+    Part.Size = Vector3.new(0, 0, 0);
+    Part.Transparency = 1;
+    game.Debris:AddItem(Part, 1);
+    Part.CFrame = CFrame.new(u30, u33);
+    Part.Material = Enum.Material.SmoothPlastic;
+    Part.Parent = workspace.Ignored.Siren.Radius;
+    local Attachment = Instance.new("Attachment");
+    Attachment.Position = Vector3.new(0, 0, 0);
+    Attachment.Parent = Part;
+    local Attachment2 = Instance.new("Attachment");
+    Attachment2.Position = Vector3.new(0, 0, -(u33 - u30).magnitude);
+    Attachment2.Parent = Part;
+    local u36 = false;
+    local u37 = nil;
+    local v38;
+
+    if Handle then
+        local v39 = Handle.Parent and Handle.Parent.Name;
+
+        if v39 and not PlayerFromCharacter and (u28 and u28 ~= "" or SkinAssets.GunSkinMuzzleParticle:FindFirstChild(v39)) then
+            if u28 == "" then
+                u28 = v39;
+            else
+                u28 = u28 or v39;
+            end;
+
+            local v40 = IsLeftHand and "LeftMuzzle" or "Muzzle";
+
+            if SkinAssets.GunSkinMuzzleParticle:FindFirstChild(u28) then
+                if not isReflecting then
+                    if SkinAssets.GunSkinMuzzleParticle[u28]:FindFirstChild(v40) or IsLeftHand then
+                        local v41 = Handle.Parent:FindFirstChild("Default") and Handle.Parent.Default:FindFirstChild("Mesh") and Handle.Parent.Default.Mesh:FindFirstChild(v40) or Handle:FindFirstChild(v40);
+                        local v42;
+
+                        if IsLeftHand then
+                            local v43;
+
+                            if Handle.Parent:FindFirstChild("Default") and Handle.Parent.Default:FindFirstChild("Mesh") then
+                                v43 = Handle.Parent.Default.Mesh.DualWieldLeftHandMesh:FindFirstChild(v40) or v41;
+                            else
+                                v43 = v41;
+                            end;
+
+                            v42 = v43 ~= v41;
+
+                            if v42 then
+                                v41 = v43;
+                            end;
+                        else
+                            v42 = false;
+                        end;
+
+                        if v41 then
+                            local v44;
+
+                            if v42 then
+                                v44 = v41;
+                            elseif SkinAssets.GunSkinMuzzleParticle[u28].Muzzle:FindFirstChild("Different_GunMuzzle") then
+                                v44 = SkinAssets.GunSkinMuzzleParticle[u28][v40].Different_GunMuzzle[v39];
+                            else
+                                v44 = SkinAssets.GunSkinMuzzleParticle[u28][v40];
+                            end;
+
+                            for _, child in v44:GetChildren() do
+                                local v45 = child:GetAttribute("EmitCount") or 1;
+                                local u46 = IsLeftHand and child and child or child:Clone();
+                                u46.Parent = v41;
+                                u46:Emit(v45);
+
+                                if not v42 then
+                                    task.delay(u46.Lifetime.Max, function() -- Line: 267
+                                        -- upvalues: u46 (copy)
+                                        u46:Destroy();
+                                    end);
+                                end;
+                            end;
+                        end;
+                    else
+                        local Children = SkinAssets.GunSkinMuzzleParticle[u28]:GetChildren();
+                        local v47 = Children[math.random(#Children)]:Clone();
+                        v47.Parent = Attachment;
+                        v47:Emit(v47.Rate);
+                    end;
+                end;
+
+                u36 = true;
+            end;
+
+            if SkinAssets.GunBeam:FindFirstChild(u28) then
+                local v48 = SkinAssets.GunBeam[u28];
+                local v49 = IsLeftHand and "LeftGunBeam" or "GunBeam";
+                local v50 = v48:FindFirstChild(v49) or v48.GunBeam;
+                local _ = IsLeftHand and (v50:IsA("BasePart") and v50:FindFirstChild("LeftHandBeam"));
+
+                if v50:IsA("BasePart") then
+                    v38 = {
+                        Parent = nil,
+                        Attachment0 = nil,
+                        Attachment1 = nil
+                    };
+                    local Different_GunBeam = v50:FindFirstChild("Different_GunBeam");
+
+                    if Different_GunBeam and Different_GunBeam:FindFirstChild(v39) then
+                        local v51 = Different_GunBeam[v39][v49];
+
+                        if v51 and v51:IsA("BasePart") then
+                            u37 = v51:Clone();
+                        elseif v51 then
+                            v38 = v51:Clone() or v38;
+                        end;
+                    else
+                        u37 = v50:Clone();
+                    end;
+                else
+                    v38 = v50:Clone();
+                end;
+            else
+                v38 = game.ReplicatedStorage.GunBeam:Clone();
+                v38.Color = BeamColor and ColorSequence.new(BeamColor) or v38.Color;
+            end;
+        else
+            v38 = game.ReplicatedStorage.GunBeam:Clone();
+            v38.Color = BeamColor and ColorSequence.new(BeamColor) or v38.Color;
+        end;
+    else
+        v38 = nil;
+    end;
+
+    task.spawn(function() -- Line: 325
+        -- upvalues: u37 (ref), u33 (ref), u30 (copy), evalColorSequence (ref), u32 (ref), u34 (ref), PlayerFromCharacter (copy), u28 (ref), SkinAssets (ref), Part (copy), Handle (copy), u36 (ref), TweenService (ref)
+        if u37 then
+            local magnitude = (u33 - u30).magnitude;
+            local v52 = magnitude / 725;
+            u37.Anchored = true;
+            u37.CanCollide = false;
+            u37.CanQuery = false;
+            u37.CFrame = CFrame.new(u30, u33);
+            local v53 = u37.CFrame * CFrame.new(0, 0, -magnitude);
+            u37.Parent = workspace.Ignored.Siren.Radius;
+            task.delay(v52 + 5, function() -- Line: 341
+                -- upvalues: u37 (ref)
+                u37:Destroy();
+                u37 = nil;
+            end);
+
+            if u37:GetAttribute("SpecialEffects") then
+                for _, descendant in pairs(u37:GetDescendants()) do
+                    if descendant:IsA("Trail") and descendant:GetAttribute("ColorRandom") then
+                        local Attribute = descendant:GetAttribute("ColorRandom");
+                        descendant.Color = ColorSequence.new(evalColorSequence(Attribute, math.random()));
+                    end;
+                end;
+            end;
+
+            local v54 = game:GetService("TweenService"):Create(u37, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {
+                CFrame = u37.CFrame * CFrame.new(0, 0, -0.1)
+            });
+            v54:Play();
+            task.wait(0.05);
+
+            if v54.PlaybackState ~= Enum.PlaybackState.Completed then
+                v54:Pause();
+            end;
+
+            local v55 = nil;
+
+            if _G.Reduce_Lag and not u37:GetAttribute("NoSlow") or u37:GetAttribute("LOWGFX") then
+                u37.CFrame = v53;
+            else
+                v55 = game:GetService("TweenService"):Create(u37, TweenInfo.new(v52, Enum.EasingStyle.Linear), {
+                    CFrame = v53
+                });
+                v55:Play();
+                task.wait(v52);
+            end;
+
+            if u37:FindFirstChild("Impact") and (u32 and (u34 and (u32.Parent and not u32.Parent:FindFirstChild("Humanoid")))) then
+                if v55 and v55.PlaybackState ~= Enum.PlaybackState.Completed then
+                    task.wait(0.05);
+                end;
+
+                if not u37:FindFirstChild("NoNormal") then
+                    u37.CFrame = CFrame.new(u33, u33 - u34);
+                end;
+
+                for _, child in pairs(u37.Impact:GetChildren()) do
+                    if child:IsA("ParticleEmitter") then
+                        child:Emit(child:GetAttribute("EmitCount") or 1);
+                    end;
+                end;
+            else
+                for _, child in pairs(u37:GetChildren()) do
+                    if child:IsA("BasePart") then
+                        child.Transparency = 1;
+                    end;
+                end;
+            end;
+
+            if u37 then
+                for _, descendant in pairs(u37:GetDescendants()) do
+                    if descendant:IsA("ParticleEmitter") then
+                        descendant.Enabled = false;
+                    end;
+                end;
+            end;
+        elseif u32 and (u34 and (u32:IsDescendantOf(workspace.MAP) and (not PlayerFromCharacter and (u28 and (SkinAssets.GunBeam:FindFirstChild(u28) and SkinAssets.GunBeam[u28]:FindFirstChild("Impact")))))) then
+            local u56 = SkinAssets.GunBeam[u28].Impact:Clone();
+            u56.Parent = workspace.Ignored;
+            u56:PivotTo(CFrame.new(u33, u33 + u34 * 5) * CFrame.Angles(-1.5707963267948966, 0, 0));
+
+            for _, descendant in pairs(u56:GetDescendants()) do
+                if descendant:IsA("ParticleEmitter") then
+                    descendant:Emit(descendant:GetAttribute("EmitCount") or 1);
+                end;
+            end;
+
+            task.delay(1.5, function() -- Line: 410
+                -- upvalues: u56 (ref)
+                u56:Destroy();
+                u56 = nil;
+            end);
+        end;
+
+        local PointLight = Instance.new("PointLight");
+        PointLight.Brightness = 0.5;
+        PointLight.Range = 15;
+        PointLight.Shadows = true;
+        PointLight.Color = Color3.new(1, 1, 1);
+        PointLight.Parent = Part;
+        local ShootBBGUI = Handle:FindFirstChild("ShootBBGUI");
+        local v57 = ShootBBGUI and (not u36 and ShootBBGUI:FindFirstChild("Shoot"));
+
+        if v57 then
+            v57.Size = UDim2.new(0, 0, 0, 0);
+            v57.ImageTransparency = 1;
+            v57.Visible = true;
+            TweenService:Create(v57, TweenInfo.new(0.4, Enum.EasingStyle.Bounce, Enum.EasingDirection.In, 0, false, 0), {
+                ImageTransparency = 0.4,
+                Size = UDim2.new(1, 0, 1, 0)
+            }):Play();
+            TweenService:Create(PointLight, TweenInfo.new(0.4, Enum.EasingStyle.Bounce, Enum.EasingDirection.In, 0, false, 0), {
+                Range = 0
+            }):Play();
+            wait(0.4);
+            Part:Destroy();
+            TweenService:Create(v57, TweenInfo.new(0.2, Enum.EasingStyle.Bounce, Enum.EasingDirection.In, 0, false, 0), {
+                ImageTransparency = 1,
+                Size = UDim2.new(1, 0, 1, 0)
+            }):Play();
+            wait(0.2);
+            v57.Visible = false;
+        end;
+    end);
+    v38.Attachment0 = Attachment;
+    v38.Attachment1 = Attachment2;
+    v38.Name = "NewGunBeam";
+    v38.Parent = Part;
+
+    if Shooter == LocalPlayer.Character and workspace:GetServerTimeNow() - ServerTimeNow > 0.95 then
+        playerShot(Handle);
+    end;
+
+    if not u25[Handle] then
+        if not Handle.Parent then
+            return;
+        end;
+
+        local v58 = u28 or "None";
+        task.spawn(GunSoundPlay.SoundPlay, Handle, u2[v58] ~= "All" and not (u2[v58] and u2[v58][Handle.Parent.Name]) and true or false, PlayerFromCharacter);
+        u25[Handle] = true;
+        task.delay(0.021, function() -- Line: 464
+            -- upvalues: u25 (ref), Handle (copy)
+            u25[Handle] = nil;
+        end);
+    end;
+
+    task.spawn(function() -- Line: 469
+        -- upvalues: Handle (copy), IsLeftHand (copy), u24 (ref), Shooter (copy), u33 (ref), BeamColor (copy), Hit (copy), u27 (copy)
+        if Handle:GetAttribute("DualWield") and not IsLeftHand then
+            u24.shoot({
+                IsLeftHand = true,
+                Shooter = Shooter,
+                Handle = Handle,
+                ForcedOrigin = Handle.Parent.Default.Mesh.DualWieldLeftHandMesh.LeftMuzzle.WorldPosition,
+                AimPosition = u33,
+                BeamColor = BeamColor,
+                Hit = Hit,
+                Range = u27
+            });
+        end;
+    end);
+
+    return u33, u32, u34;
+end;
+
+return u24;
+
+-- // Function Dumper made by King.Kevin
+-- // Script Path: game:GetService("ReplicatedStorage").Modules.GunHandler
+
+--[[
+Function Dump: evalColorSequence
+
+Function Upvalues: evalColorSequence
+
+Function Constants: evalColorSequence
+        1 [number] = 0
+        2 [string] = Keypoints
+        3 [string] = Value
+        4 [number] = 1
+        5 [string] = Time
+        6 [string] = Color3
+        7 [string] = new
+        9 [string] = R
+        10 [string] = G
+        11 [string] = B
+
+====================================================================================================
+
+Function Dump: getAim
+
+Function Upvalues: getAim
+        1 [Instance] = Ticks_NOX
+        2 [Instance] = Camera
+        3 [Instance] = Instance
+
+Function Constants: getAim
+        1 [number] = 200
+        2 [string] = RaycastParams
+        3 [string] = new
+        5 [string] = Character
+        6 [string] = workspace
+        7 [Instance] = Workspace
+        8 [string] = Ignored
+        9 [string] = GetChildren
+        10 [string] = table
+        11 [string] = insert
+        13 [string] = FilterDescendantsInstances
+        14 [string] = Enum
+        15 [string] = RaycastFilterType
+        16 [string] = Exclude
+        17 [EnumItem] = Enum.RaycastFilterType.Exclude
+        18 [string] = FilterType
+        19 [string] = IgnoreWater
+        20 [string] = _G
+        22 [string] = MobileShiftLock
+        23 [string] = MobleAimingIn
+        24 [string] = CFrame
+        25 [string] = Position
+        26 [string] = LookVector
+        27 [string] = Raycast
+        28 [string] = X
+        29 [string] = Y
+        30 [string] = ScreenPointToRay
+        31 [string] = Origin
+        32 [string] = Direction
+        33 [string] = Dot
+        34 [string] = Unit
+        35 [string] = Magnitude
+
+====================================================================================================
+
+Function Dump: shoot
+
+Function Upvalues: shoot
+        1 [Instance] = Players
+        2 [table]:
+        2 [table] table: 0x340862d8ea517467
+                1 [function] = shoot
+                2 [function] = getAim
+                3 [function] = Unknown Name
+        3 [Instance] = Ticks_NOX
+        4 [Instance] = SkinAssets
+        5 [function] = evalColorSequence
+        6 [Instance] = TweenService
+        7 [number] = 1787781201.153301
+        8 [function] = playerShot
+        9 [table]:
+        9 [table] table: 0x3cc8a9a38686ba27
+        10 [table]:
+        10 [table] table: 0xc8d8efc1ba6cb3f7
+                1 [string] = All
+        11 [table]:
+        11 [table] table: 0x7c7d543f6fcb6b07
+                1 [function] = Unknown Name
+
+Function Constants: shoot
+        1 [string] = Shooter
+        2 [string] = Handle
+        3 [string] = AimPosition
+        4 [string] = BeamColor
+        5 [string] = isReflecting
+        6 [string] = Hit
+        7 [number] = 200
+        8 [string] = Range
+        9 [string] = SkinName
+        10 [string] = GetAttribute
+        11 [string] = IsLeftHand
+        12 [string] = GetPlayerFromCharacter
+        13 [string] = GunFX
+        14 [string] = getAim
+        15 [string] = Position
+        16 [string] = Character
+        17 [string] = ForcedOrigin
+        18 [string] = Muzzle
+        19 [string] = WorldPosition
+        20 [string] = Unit
+        21 [string] = RaycastParams
+        22 [string] = new
+        24 [string] = require
+        26 [string] = game
+        27 [Instance] = Ugc
+        28 [string] = ReplicatedStorage
+        29 [string] = MainModule
+        30 [string] = Ignored
+        31 [string] = unpack
+        33 [string] = FilterDescendantsInstances
+        34 [string] = Enum
+        35 [string] = RaycastFilterType
+        36 [string] = Exclude
+        37 [EnumItem] = Enum.RaycastFilterType.Exclude
+        38 [string] = FilterType
+        39 [string] = IgnoreWater
+        40 [string] = Normal
+        41 [string] = workspace
+        42 [Instance] = Workspace
+        43 [string] = Raycast
+        44 [string] = Instance
+        45 [string] = math
+        46 [string] = min
+        48 [string] = Name
+        49 [string] = Head
+        51 [string] = Part
+        52 [string] = OwnerCharacter
+        53 [string] = SetAttribute
+        54 [string] = BULLET_RAYS
+        55 [string] = Anchored
+        56 [string] = CanCollide
+        57 [Vector3] = 0, 0, 0
+        58 [string] = Size
+        59 [string] = Transparency
+        60 [string] = Debris
+        61 [string] = AddItem
+        62 [string] = CFrame
+        64 [string] = Material
+        65 [string] = SmoothPlastic
+        66 [EnumItem] = Enum.Material.SmoothPlastic
+        67 [string] = Siren
+        68 [string] = Radius
+        69 [string] = Parent
+        70 [string] = Attachment
+        71 [string] = magnitude
+        72 [string] = Vector3
+        74 [string] = 
+        75 [string] = GunSkinMuzzleParticle
+        76 [string] = FindFirstChild
+        77 [string] = LeftMuzzle
+        78 [string] = Default
+        79 [string] = Mesh
+        80 [string] = DualWieldLeftHandMesh
+        81 [string] = Different_GunMuzzle
+        82 [string] = GetChildren
+        83 [number] = 1
+        84 [string] = EmitCount
+        85 [string] = Clone
+        86 [string] = Emit
+        87 [string] = task
+        88 [string] = delay
+        90 [string] = Lifetime
+        91 [string] = Max
+        92 [string] = random
+        94 [string] = Rate
+        95 [string] = GunBeam
+        96 [string] = LeftGunBeam
+        97 [string] = BasePart
+        98 [string] = IsA
+        99 [string] = LeftHandBeam
+        101 [string] = Attachment0
+        102 [string] = Attachment1
+        103 [table]:
+        103 [table] table: 0x4d4867d5a961aea7
+        104 [string] = Different_GunBeam
+        105 [string] = ColorSequence
+        107 [string] = Color
+        108 [string] = spawn
+        110 [string] = NewGunBeam
+        111 [string] = GetServerTimeNow
+        112 [number] = 0.95
+        113 [string] = None
+        114 [string] = All
+        115 [string] = SoundPlay
+        116 [number] = 0.021
+
+====================================================================================================
+
+Function Dump: playerShot
+
+Function Upvalues: playerShot
+        1 [Instance] = Ticks_NOX
+        2 [Instance] = Ticks_NOX
+        3 [Instance] = Shoot
+        4 [Instance] = ReplicatedStorage
+        5 [Instance] = ShootLeft
+        6 [Instance] = ShootRight
+        7 [Instance] = AimShoot
+        8 [table]:
+        8 [table] table: 0x4ca8617a628fe947
+                1 [string] = [Shotgun]
+                2 [string] = [Drum-Shotgun]
+                3 [string] = [Rifle]
+                4 [string] = [TacticalShotgun]
+                5 [string] = [AR]
+                6 [string] = [AUG]
+                7 [string] = [AK47]
+                8 [string] = [LMG]
+                9 [string] = [SilencerAR]
+
+Function Constants: playerShot
+        1 [string] = Character
+        2 [string] = Humanoid
+        3 [string] = Animator
+        4 [string] = Animations
+        5 [string] = GunCombat
+        6 [string] = Shoot
+        7 [string] = LoadAnimation
+        8 [string] = ShootLeft
+        9 [string] = ShootRight
+        10 [string] = AimShoot
+        11 [string] = _G
+        13 [string] = Aimed
+        14 [string] = MobleAimingIn
+        15 [string] = table
+        16 [string] = find
+        18 [string] = Parent
+        19 [string] = Name
+        20 [string] = Play
+        21 [string] = DualWield
+        22 [string] = GetAttribute
+
+====================================================================================================
+]]
+
+-- // Function Dumper made by King.Kevin
+-- // Script Path: game:GetService("ReplicatedStorage").Modules.GunHandler
+
+--[[
+Function Dump: evalColorSequence
+
+Function Upvalues: evalColorSequence
+
+Function Constants: evalColorSequence
+        1 [number] = 0
+        2 [string] = Keypoints
+        3 [string] = Value
+        4 [number] = 1
+        5 [string] = Time
+        6 [string] = Color3
+        7 [string] = new
+        9 [string] = R
+        10 [string] = G
+        11 [string] = B
+
+====================================================================================================
+
+Function Dump: getAim
+
+Function Upvalues: getAim
+        1 [Instance] = Ticks_NOX
+        2 [Instance] = Camera
+        3 [Instance] = Instance
+
+Function Constants: getAim
+        1 [number] = 200
+        2 [string] = RaycastParams
+        3 [string] = new
+        5 [string] = Character
+        6 [string] = workspace
+        7 [Instance] = Workspace
+        8 [string] = Ignored
+        9 [string] = GetChildren
+        10 [string] = table
+        11 [string] = insert
+        13 [string] = FilterDescendantsInstances
+        14 [string] = Enum
+        15 [string] = RaycastFilterType
+        16 [string] = Exclude
+        17 [EnumItem] = Enum.RaycastFilterType.Exclude
+        18 [string] = FilterType
+        19 [string] = IgnoreWater
+        20 [string] = _G
+        22 [string] = MobileShiftLock
+        23 [string] = MobleAimingIn
+        24 [string] = CFrame
+        25 [string] = Position
+        26 [string] = LookVector
+        27 [string] = Raycast
+        28 [string] = X
+        29 [string] = Y
+        30 [string] = ScreenPointToRay
+        31 [string] = Origin
+        32 [string] = Direction
+        33 [string] = Dot
+        34 [string] = Unit
+        35 [string] = Magnitude
+
+====================================================================================================
+
+Function Dump: shoot
+
+Function Upvalues: shoot
+        1 [Instance] = Players
+        2 [table]:
+        2 [table] table: 0x340862d8ea517467
+                1 [function] = shoot
+                2 [function] = getAim
+                3 [function] = Unknown Name
+        3 [Instance] = Ticks_NOX
+        4 [Instance] = SkinAssets
+        5 [function] = evalColorSequence
+        6 [Instance] = TweenService
+        7 [number] = 1787781201.153301
+        8 [function] = playerShot
+        9 [table]:
+        9 [table] table: 0x3cc8a9a38686ba27
+        10 [table]:
+        10 [table] table: 0xc8d8efc1ba6cb3f7
+                1 [string] = All
+        11 [table]:
+        11 [table] table: 0x7c7d543f6fcb6b07
+                1 [function] = Unknown Name
+
+Function Constants: shoot
+        1 [string] = Shooter
+        2 [string] = Handle
+        3 [string] = AimPosition
+        4 [string] = BeamColor
+        5 [string] = isReflecting
+        6 [string] = Hit
+        7 [number] = 200
+        8 [string] = Range
+        9 [string] = SkinName
+        10 [string] = GetAttribute
+        11 [string] = IsLeftHand
+        12 [string] = GetPlayerFromCharacter
+        13 [string] = GunFX
+        14 [string] = getAim
+        15 [string] = Position
+        16 [string] = Character
+        17 [string] = ForcedOrigin
+        18 [string] = Muzzle
+        19 [string] = WorldPosition
+        20 [string] = Unit
+        21 [string] = RaycastParams
+        22 [string] = new
+        24 [string] = require
+        26 [string] = game
+        27 [Instance] = Ugc
+        28 [string] = ReplicatedStorage
+        29 [string] = MainModule
+        30 [string] = Ignored
+        31 [string] = unpack
+        33 [string] = FilterDescendantsInstances
+        34 [string] = Enum
+        35 [string] = RaycastFilterType
+        36 [string] = Exclude
+        37 [EnumItem] = Enum.RaycastFilterType.Exclude
+        38 [string] = FilterType
+        39 [string] = IgnoreWater
+        40 [string] = Normal
+        41 [string] = workspace
+        42 [Instance] = Workspace
+        43 [string] = Raycast
+        44 [string] = Instance
+        45 [string] = math
+        46 [string] = min
+        48 [string] = Name
+        49 [string] = Head
+        51 [string] = Part
+        52 [string] = OwnerCharacter
+        53 [string] = SetAttribute
+        54 [string] = BULLET_RAYS
+        55 [string] = Anchored
+        56 [string] = CanCollide
+        57 [Vector3] = 0, 0, 0
+        58 [string] = Size
+        59 [string] = Transparency
+        60 [string] = Debris
+        61 [string] = AddItem
+        62 [string] = CFrame
+        64 [string] = Material
+        65 [string] = SmoothPlastic
+        66 [EnumItem] = Enum.Material.SmoothPlastic
+        67 [string] = Siren
+        68 [string] = Radius
+        69 [string] = Parent
+        70 [string] = Attachment
+        71 [string] = magnitude
+        72 [string] = Vector3
+        74 [string] = 
+        75 [string] = GunSkinMuzzleParticle
+        76 [string] = FindFirstChild
+        77 [string] = LeftMuzzle
+        78 [string] = Default
+        79 [string] = Mesh
+        80 [string] = DualWieldLeftHandMesh
+        81 [string] = Different_GunMuzzle
+        82 [string] = GetChildren
+        83 [number] = 1
+        84 [string] = EmitCount
+        85 [string] = Clone
+        86 [string] = Emit
+        87 [string] = task
+        88 [string] = delay
+        90 [string] = Lifetime
+        91 [string] = Max
+        92 [string] = random
+        94 [string] = Rate
+        95 [string] = GunBeam
+        96 [string] = LeftGunBeam
+        97 [string] = BasePart
+        98 [string] = IsA
+        99 [string] = LeftHandBeam
+        101 [string] = Attachment0
+        102 [string] = Attachment1
+        103 [table]:
+        103 [table] table: 0x4d4867d5a961aea7
+        104 [string] = Different_GunBeam
+        105 [string] = ColorSequence
+        107 [string] = Color
+        108 [string] = spawn
+        110 [string] = NewGunBeam
+        111 [string] = GetServerTimeNow
+        112 [number] = 0.95
+        113 [string] = None
+        114 [string] = All
+        115 [string] = SoundPlay
+        116 [number] = 0.021
+
+====================================================================================================
+
+Function Dump: playerShot
+
+Function Upvalues: playerShot
+        1 [Instance] = Ticks_NOX
+        2 [Instance] = Ticks_NOX
+        3 [Instance] = Shoot
+        4 [Instance] = ReplicatedStorage
+        5 [Instance] = ShootLeft
+        6 [Instance] = ShootRight
+        7 [Instance] = AimShoot
+        8 [table]:
+        8 [table] table: 0x4ca8617a628fe947
+                1 [string] = [Shotgun]
+                2 [string] = [Drum-Shotgun]
+                3 [string] = [Rifle]
+                4 [string] = [TacticalShotgun]
+                5 [string] = [AR]
+                6 [string] = [AUG]
+                7 [string] = [AK47]
+                8 [string] = [LMG]
+                9 [string] = [SilencerAR]
+
+Function Constants: playerShot
+        1 [string] = Character
+        2 [string] = Humanoid
+        3 [string] = Animator
+        4 [string] = Animations
+        5 [string] = GunCombat
+        6 [string] = Shoot
+        7 [string] = LoadAnimation
+        8 [string] = ShootLeft
+        9 [string] = ShootRight
+        10 [string] = AimShoot
+        11 [string] = _G
+        13 [string] = Aimed
+        14 [string] = MobleAimingIn
+        15 [string] = table
+        16 [string] = find
+        18 [string] = Parent
+        19 [string] = Name
+        20 [string] = Play
+        21 [string] = DualWield
+        22 [string] = GetAttribute
+
+====================================================================================================
+]]
